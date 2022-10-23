@@ -42,7 +42,6 @@ public class EchoServer extends AbstractServer
   }
 
   synchronized protected void clientException( ConnectionToClient client, Throwable exception) {
-
     System.out.println("Client has disconnected! ");
   }
 

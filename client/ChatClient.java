@@ -50,10 +50,13 @@ public class ChatClient extends AbstractClient
 
   protected void connectionException(Exception exception) {
     clientUI.display("Server has stopped, quitting client");
-    quit();
+    connectionClosed(false);
 	}
 
-  public  void connectionClosed() {
+  public  void connectionClosed(boolean x) {
+    if(!x){
+      System.exit(0);
+    }
     
 	}
 
@@ -74,20 +77,89 @@ public class ChatClient extends AbstractClient
    * This method handles all data coming from the UI            
    *
    * @param message The message from the UI.    
+   * @throws IOException
    */
-  public void handleMessageFromClientUI(String message)
-  {
-    try
-    {
-      sendToServer(message);
-    }
-    catch(IOException e)
-    {
-      clientUI.display
-        ("Could not send message to server.  Terminating client.");
-      quit();
-    }
+
+  private void handleCommand(String command) throws IOException{
+
+      switch(command){
+        case "quit":
+            closeConnection();
+            quit();
+            break;
+    
+        case "logoff": 
+          if(isConnected()){
+            closeConnection();
+      
+        }else{
+          throw new IOException("Client not connected already");
+        }
+        break;
+            
+        case "login":
+            if(isConnected() == false){
+              openConnection();
+          
+            }else{
+              throw new IOException("Client already connected");
+            }
+            break;
+        case "gethost":
+          clientUI.display("Host: "+ getHost());
+          break;
+        case "getport":
+           clientUI.display("Port: "+ getPort());
+           break;
+      }
+
+      if(command.contains("sethost")){
+        if(isConnected() == false){
+          String host = "";
+          for(int i = 7; i < command.length(); i ++){
+            host += command.charAt(i);
+          }
+          setHost(host);
+        }else{
+          throw  new IOException("Client already connected");
+        }
+      }
+      if(command.contains("setport")){
+        if(isConnected() == false){
+          String numberOnly= command.replaceAll("[^0-9]", "");
+          setPort(Integer.valueOf(numberOnly));
+        }else{
+          throw  new IOException("Client already connected");
+        }
+      }
+      
   }
+  public void handleMessageFromClientUI(String message) throws IOException
+  {
+    message = message.trim();
+    String command = "";
+    for(int i =1; i <message.length();i++){
+      command += message.charAt(i);
+    }
+
+    if(message.charAt(0) == '#'){
+      try{ handleCommand(command);}
+      catch(Exception e){
+        System.out.println(e);
+      }
+    }else{
+      try
+      {
+        sendToServer(message);
+      }
+      catch(IOException e)
+      {
+        clientUI.display
+          ("Could not send message to server.  Terminating client.");
+        quit();
+      }
+  }
+}
   
   /**
    * This method terminates the client.
