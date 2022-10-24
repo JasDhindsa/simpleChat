@@ -28,6 +28,7 @@ public class ChatClient extends AbstractClient
    * the display method in the client.
    */
   ChatIF clientUI; 
+  String login;
 
   
   //Constructors ****************************************************
@@ -40,12 +41,15 @@ public class ChatClient extends AbstractClient
    * @param clientUI The interface type variable.
    */
   
-  public ChatClient(String host, int port, ChatIF clientUI) 
+  public ChatClient(String login, String host, int port, ChatIF clientUI) 
     throws IOException 
   {
     super(host, port); //Call the superclass constructor
+    this.login=login;
     this.clientUI = clientUI;
     openConnection();
+    String msg = "#login "+login;
+    sendToServer(msg);
   }
 
   protected void connectionException(Exception exception) {
@@ -82,6 +86,26 @@ public class ChatClient extends AbstractClient
 
   private void handleCommand(String command) throws IOException{
 
+    if(command.contains("sethost")){
+      if(isConnected() == false){
+        String host = "";
+        for(int i = 7; i < command.length(); i ++){
+          host += command.charAt(i);
+        }
+        setHost(host);
+      }else{
+        throw  new IOException("Client already connected");
+      }
+    }
+    if(command.contains("setport")){
+      if(isConnected() == false){
+        String numberOnly= command.replaceAll("[^0-9]", "");
+        setPort(Integer.valueOf(numberOnly));
+      }else{
+        throw  new IOException("Client already connected");
+      }
+    }
+
       switch(command){
         case "quit":
             closeConnection();
@@ -111,29 +135,13 @@ public class ChatClient extends AbstractClient
         case "getport":
            clientUI.display("Port: "+ getPort());
            break;
+
+        default:
+           throw new IOException("Invalid Command"); 
+           
       }
 
-      if(command.contains("sethost")){
-        if(isConnected() == false){
-          String host = "";
-          for(int i = 7; i < command.length(); i ++){
-            host += command.charAt(i);
-          }
-          setHost(host);
-        }else{
-          throw  new IOException("Client already connected");
-        }
-      }
-      if(command.contains("setport")){
-        if(isConnected() == false){
-          String numberOnly= command.replaceAll("[^0-9]", "");
-          setPort(Integer.valueOf(numberOnly));
-        }else{
-          throw  new IOException("Client already connected");
-        }
-      }
-      
-  }
+    }
   public void handleMessageFromClientUI(String message) throws IOException
   {
     message = message.trim();
