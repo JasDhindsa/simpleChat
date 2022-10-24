@@ -23,6 +23,8 @@ public class EchoServer extends AbstractServer
    * The default port to listen on.
    */
   final public static int DEFAULT_PORT = 5555;
+  private ChatIF server;
+  private boolean serverstatus;
   
   //Constructors ****************************************************
   
@@ -36,6 +38,11 @@ public class EchoServer extends AbstractServer
     super(port);
   }
 
+  public EchoServer(int port, ChatIF serverConsole) {
+    super(port);
+    this.server = serverConsole;
+  }
+
   public void clientConnected(ConnectionToClient client){
     
       System.out.println("Client has connected! ");
@@ -45,9 +52,68 @@ public class EchoServer extends AbstractServer
     System.out.println("Client has disconnected! ");
   }
 
-  // public void clientDisconnected(ConnectionToClient client){
-  //   System.out.println("Client has disconnected! ");
-  // }
+  public void handleMessageFromServerUI(String message){
+
+    message = message.trim();
+    String command = "";
+    for(int i =1; i <message.length();i++){
+      command += message.charAt(i);
+    }
+
+	  if(command == ""){
+			try{
+				
+        handleCommand(command);
+			}
+			catch(IOException e){
+				System.out.println(e);
+			}
+		}
+	  else{
+      sendToAllClients("SERVER MSG>" + message);
+		  server.display("SERVER MSG>" + message);
+		  
+	  }
+  }
+  
+  private void handleCommand(String command) throws IOException{
+	  //create string array to handle setHost and setPort
+
+    if(command.contains("setport")){
+      if(serverstatus== false){
+        String numberOnly= command.replaceAll("[^0-9]", "");
+        setPort(Integer.valueOf(numberOnly));
+      }else{
+        throw  new IOException("Client already connected");
+      }
+    }
+	  
+	  switch (command){ 
+	  	  case "quit" : 
+          System.exit(0);
+	  	  	break;	
+		  case "stop" : 
+        stopListening();
+		  	break;
+		  case "close": 
+        close();
+		  	break;
+		  case "start":
+			if(isListening() == false) {
+				listen();
+		  	}
+			else{
+				throw new IOException("Currently listening");
+			}
+			break;
+		  case "getport":
+			  server.display(""+getPort());
+			  break;
+		  default:
+			  throw new IOException("Invalid Command"); 
+		  	
+	  }
+  }
 
   
   //Instance methods ************************************************
@@ -58,8 +124,7 @@ public class EchoServer extends AbstractServer
    * @param msg The message received from the client.
    * @param client The connection from which the message originated.
    */
-  public void handleMessageFromClient
-    (Object msg, ConnectionToClient client)
+  public void handleMessageFromClient (Object msg, ConnectionToClient client)
   {
     System.out.println("Message received: " + msg + " from " + client);
     this.sendToAllClients(msg);
@@ -72,6 +137,7 @@ public class EchoServer extends AbstractServer
    */
   protected void serverStarted()
   {
+    serverstatus = true;
     System.out.println
       ("Server listening for connections on port " + getPort());
   }
@@ -82,6 +148,7 @@ public class EchoServer extends AbstractServer
    */
   protected void serverStopped()
   {
+    serverstatus = false;
     System.out.println
       ("Server has stopped listening for connections.");
   }
