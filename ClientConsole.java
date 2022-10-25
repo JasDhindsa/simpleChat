@@ -125,7 +125,7 @@ public class ClientConsole implements ChatIF
     login = args[0];
    }catch(ArrayIndexOutOfBoundsException e)
    {
-     System.out.println("Please give a login username, we will be terminating the client.");
+     System.out.println("ERROR - No login ID specified.  Connection aborted");
      System.exit(0);
    }
 

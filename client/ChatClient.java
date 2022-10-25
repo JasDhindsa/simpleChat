@@ -53,7 +53,7 @@ public class ChatClient extends AbstractClient
   }
 
   protected void connectionException(Exception exception) {
-    clientUI.display("Server has stopped, quitting client");
+    clientUI.display("The server has shut down");
     connectionClosed(false);
 	}
 
