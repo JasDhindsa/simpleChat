@@ -109,6 +109,7 @@ public class EchoServer extends AbstractServer
         close();
 		  	break;
 		  case "stop" : 
+			  System.out.println("Server has stopped listening for connections.");
         stopListening();
 		  	break;
 		  
